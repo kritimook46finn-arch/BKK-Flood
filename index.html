@@ -102,10 +102,11 @@
             { id: "windy", name: "3. Windy (เรดาร์ฝน)", url: "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=6&overlay=rain&product=ecmwf&level=surface&lat=13.756&lon=100.502", icon: "fa-wind" },
             { id: "tmd", name: "4. เรดาร์กรมอุตุฯ", url: "https://weather.tmd.go.th", icon: "fa-satellite-dish" },
             { id: "googleflood", name: "5. Google Flood Hub", url: "https://sites.research.google/floods", icon: "fa-google", noIframe: true },
-            { id: "bkk-rain", name: "6. กทม. ปริมาณฝน", url: "https://weather.bangkok.go.th/rain", icon: "fa-cloud-rain" },
-            { id: "bkk-flood", name: "7. กทม. น้ำท่วมถนน", url: "https://weather.bangkok.go.th/flood/", icon: "fa-car-burst" },
-            // !!! แก้ไขจุดนี้: เพิ่ม noIframe: true เข้าไปที่ผังคลอง เพื่อไม่ให้มันโหลดมาพังๆ แบบเดิม !!!
+            // !!! เพิ่ม noIframe: true ให้กับเว็บ กทม. ทั้ง 3 เว็บนี้ !!!
+            { id: "bkk-rain", name: "6. กทม. ปริมาณฝน", url: "https://weather.bangkok.go.th/rain", icon: "fa-cloud-rain", noIframe: true },
+            { id: "bkk-flood", name: "7. กทม. น้ำท่วมถนน", url: "https://weather.bangkok.go.th/flood/", icon: "fa-car-burst", noIframe: true },
             { id: "bkk-klong", name: "8. กทม. ผังคลอง", url: "https://weather.bangkok.go.th/KlongMap", icon: "fa-map-location-dot", noIframe: true },
+            // --------------------------------------------------------
             { id: "claude", name: "9. เลี่ยงถนนน้ำท่วม", url: "https://claude.ai/artifact/N6umcENfSgoY6GMkhVKwZs", icon: "fa-route", noIframe: true }
         ];
 
