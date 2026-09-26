@@ -83,7 +83,7 @@
             <div id="no-iframe-msg" class="hidden absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-800 text-slate-400 p-6 text-center">
                 <i class="fa-solid fa-shield-halved text-5xl mb-4 text-slate-600"></i>
                 <h3 class="text-white font-bold text-lg mb-2">ไม่สามารถฝังเว็บไซต์นี้ได้</h3>
-                <p class="mb-6 text-sm">ระบบรักษาความปลอดภัยของเว็บไซต์ปลายทางไม่อนุญาตให้แสดงผลซ้อนในกรอบ (Iframe)<br>กรุณากดปุ่มด้านล่างเพื่อเปิดหน้าต่างใหม่แทนครับ</p>
+                <p class="mb-6 text-sm">ระบบรักษาความปลอดภัยของเว็บไซต์ปลายทางไม่อนุญาตให้แสดงผลซ้อนในกรอบ (Iframe)<br>ข้อมูลอาจแสดงผลไม่ครบถ้วน กรุณากดปุ่มด้านล่างเพื่อเปิดหน้าต่างใหม่แทนครับ</p>
                 <button onclick="openInNewTab()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg font-bold transition shadow-lg flex items-center gap-2">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> เปิดหน้าเว็บไซต์
                 </button>
@@ -99,15 +99,13 @@
         const sites = [
             { id: "thaiwater", name: "1. ThaiWater (ภาพรวมน้ำ)", url: "https://www.thaiwater.net/new4all", icon: "fa-droplet" },
             { id: "doh", name: "2. กรมทางหลวง CCTV", url: "https://hdms.doh.go.th/dashboard", icon: "fa-video" },
-            // แก้ไข URL ของ Windy ให้เป็นรูปแบบ Embed ที่อนุญาตให้ฝังได้
             { id: "windy", name: "3. Windy (เรดาร์ฝน)", url: "https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=6&overlay=rain&product=ecmwf&level=surface&lat=13.756&lon=100.502", icon: "fa-wind" },
             { id: "tmd", name: "4. เรดาร์กรมอุตุฯ", url: "https://weather.tmd.go.th", icon: "fa-satellite-dish" },
-            // เพิ่ม noIframe: true ให้กับเว็บที่บล็อก Iframe
             { id: "googleflood", name: "5. Google Flood Hub", url: "https://sites.research.google/floods", icon: "fa-google", noIframe: true },
             { id: "bkk-rain", name: "6. กทม. ปริมาณฝน", url: "https://weather.bangkok.go.th/rain", icon: "fa-cloud-rain" },
             { id: "bkk-flood", name: "7. กทม. น้ำท่วมถนน", url: "https://weather.bangkok.go.th/flood/", icon: "fa-car-burst" },
-            { id: "bkk-klong", name: "8. กทม. ผังคลอง", url: "https://weather.bangkok.go.th/KlongMap", icon: "fa-map-location-dot" },
-            // เพิ่ม noIframe: true ให้กับเว็บที่บล็อก Iframe
+            // !!! แก้ไขจุดนี้: เพิ่ม noIframe: true เข้าไปที่ผังคลอง เพื่อไม่ให้มันโหลดมาพังๆ แบบเดิม !!!
+            { id: "bkk-klong", name: "8. กทม. ผังคลอง", url: "https://weather.bangkok.go.th/KlongMap", icon: "fa-map-location-dot", noIframe: true },
             { id: "claude", name: "9. เลี่ยงถนนน้ำท่วม", url: "https://claude.ai/artifact/N6umcENfSgoY6GMkhVKwZs", icon: "fa-route", noIframe: true }
         ];
 
