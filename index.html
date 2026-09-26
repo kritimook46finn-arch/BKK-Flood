@@ -10,12 +10,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Turf.js สำหรับคำนวณระยะทางและเส้นทาง -->
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
     
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; }
-        #map { height: 100%; min-height: 600px; border-radius: 0.75rem; z-index: 1; background-color: #1e293b; }
+        /* กำหนดสีพื้นหลังแผนที่เป็นสีเข้ม เพื่อให้เห็นเส้นถนนชัดเจนขึ้น */
+        #map { height: 100%; min-height: 600px; border-radius: 0.75rem; z-index: 1; background-color: #0f172a; }
         
         /* Custom Icons */
         .station-icon {
@@ -27,13 +26,11 @@
         }
         .pump-normal { background-color: #3b82f6; }
         .pump-working { background-color: #22c55e; animation: pulse 1.5s infinite; }
-        .gate-closed { background-color: #ef4444; }
-        .gate-open { background-color: #eab308; }
         
         .poi-icon {
-            background-color: #f8fafc; color: #0f172a; width: 20px; height: 20px;
-            border-radius: 4px; display: flex; align-items: center; justify-content: center;
-            font-size: 10px; font-weight: bold; border: 1px solid #64748b;
+            background-color: #f8fafc; color: #0f172a; width: auto; height: 24px;
+            padding: 0 8px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: bold; border: 2px solid #64748b; white-space: nowrap;
         }
 
         @keyframes pulse {
@@ -46,8 +43,7 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: #1e293b; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         
-        /* สไตล์เส้นทาง */
-        path.leaflet-interactive { transition: stroke 0.3s, stroke-width 0.3s; }
+        path.leaflet-interactive { transition: stroke 0.3s, stroke-width 0.3s, stroke-dasharray 0.3s; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -74,10 +70,10 @@
             <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
                 <h2 class="text-sm font-bold text-slate-400 uppercase mb-3"><i class="fa-solid fa-car-burst mr-2"></i>ระบบจำลองสถานการณ์</h2>
                 <div class="flex flex-col gap-2">
-                    <button onclick="triggerFlood('ladprao')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition">
+                    <button onclick="triggerFlood('ladprao')" class="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition shadow-lg">
                         จำลอง: น้ำท่วมแยกลาดพร้าว
                     </button>
-                    <button onclick="triggerFlood('srinagarindra')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition">
+                    <button onclick="triggerFlood('srinagarindra')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded transition shadow-lg">
                         จำลอง: น้ำท่วม ถ.ศรีนครินทร์
                     </button>
                     <button onclick="resetRoutes()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded transition mt-2 border border-slate-500">
@@ -90,14 +86,14 @@
             <div class="bg-slate-900 p-4 rounded-lg border border-slate-700 flex-1">
                 <h2 class="text-sm font-bold text-slate-400 uppercase mb-3"><i class="fa-solid fa-route mr-2"></i>คำแนะนำเส้นทาง</h2>
                 
-                <div id="route-status" class="bg-green-500/20 border border-green-500 p-3 rounded-lg text-green-400 mb-3">
+                <div id="route-status" class="bg-green-500/20 border border-green-500 p-3 rounded-lg text-green-400 mb-3 transition-all duration-300">
                     <div class="flex items-center gap-2 font-bold mb-1"><i class="fa-solid fa-circle-check"></i> เส้นทางปกติ (ปลอดภัย)</div>
                     <p class="text-xs">ปัจจุบันไม่มีรายงานน้ำท่วมขังบนถนนสายหลัก สามารถสัญจรได้ตามปกติ</p>
                 </div>
 
-                <div id="reroute-info" class="hidden">
+                <div id="reroute-info" class="hidden transition-all duration-300">
                     <h3 class="text-xs font-bold text-slate-300 mb-2">เส้นทางเลี่ยงที่แนะนำ:</h3>
-                    <ul id="reroute-steps" class="text-xs text-slate-400 space-y-2 border-l-2 border-blue-500 pl-3 ml-1">
+                    <ul id="reroute-steps" class="text-xs text-slate-400 space-y-3 border-l-2 border-blue-500 pl-3 ml-1 mt-3">
                         <!-- ถูกเติมด้วย JS -->
                     </ul>
                 </div>
@@ -113,9 +109,9 @@
             <div class="absolute bottom-6 left-6 z-[400] bg-slate-900/90 backdrop-blur border border-slate-700 p-3 rounded-lg shadow-lg">
                 <h4 class="text-xs font-bold text-slate-300 mb-2">สัญลักษณ์</h4>
                 <div class="flex flex-col gap-2 text-xs text-slate-400">
-                    <div class="flex items-center gap-2"><div class="w-4 h-1 bg-blue-500"></div> ถนนปกติ</div>
-                    <div class="flex items-center gap-2"><div class="w-4 h-1 bg-red-500"></div> น้ำท่วม (หลีกเลี่ยง)</div>
-                    <div class="flex items-center gap-2"><div class="w-4 h-1 bg-green-400" style="border-bottom: 2px dashed #10b981;"></div> ทางเลี่ยงที่แนะนำ</div>
+                    <div class="flex items-center gap-2"><div class="w-6 h-1 bg-blue-500"></div> ถนนปกติ</div>
+                    <div class="flex items-center gap-2"><div class="w-6 h-1 bg-red-500" style="border-top: 2px dashed #f8fafc;"></div> น้ำท่วม (หลีกเลี่ยง)</div>
+                    <div class="flex items-center gap-2"><div class="w-6 h-1 bg-green-400" style="border-top: 2px dashed #f8fafc;"></div> ทางเลี่ยงที่แนะนำ</div>
                     <hr class="border-slate-700 my-1">
                     <div class="flex items-center gap-2"><span class="station-icon pump-working w-4 h-4 text-[8px]">P</span> เครื่องสูบน้ำทำงาน</div>
                 </div>
@@ -123,40 +119,44 @@
         </div>
     </main>
 
+    <!-- !!! เพิ่ม Leaflet JS ที่ตกหล่นไปตรงนี้ !!! -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <script>
         // 1. นาฬิกา
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('th-TH'); }, 1000);
 
         // 2. ตั้งค่าแผนที่ CRS.Simple (แผนภาพแกน X,Y)
-        const map = L.map('map', { crs: L.CRS.Simple, minZoom: -1, maxZoom: 3 });
+        const map = L.map('map', { crs: L.CRS.Simple, minZoom: -1, maxZoom: 2, zoomControl: true });
         
-        // ** ลิงก์รูปภาพแผนผังคลอง กทม. (ใช้รูปตัวอย่างมืดๆ ไปก่อน) **
+        // กำหนดขนาดจำลองของภาพแผนผัง
         const imgWidth = 2000;
         const imgHeight = 1200;
         const bounds = [[0, 0], [imgHeight, imgWidth]];
-        // ในระบบจริง คุณต้องเปลี่ยน URL นี้เป็นไฟล์ 'bkk-klong.jpg' ของคุณ
-        L.imageOverlay('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Blank_Map_of_Bangkok.svg/1024px-Blank_Map_of_Bangkok.svg.png', bounds).addTo(map);
+        
+        // ** ถ้าคุณมีไฟล์ภาพ 'bkk-klong.jpg' ให้เปลี่ยน URL ด้านล่างนี้เป็นชื่อไฟล์ของคุณได้เลยครับ **
+        L.imageOverlay('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Blank_Map_of_Bangkok.svg/1024px-Blank_Map_of_Bangkok.svg.png', bounds, {opacity: 0.1}).addTo(map);
         map.fitBounds(bounds);
-        map.setZoom(0);
+        map.setView([600, 1000], -1);
 
         // ==========================================
         // 3. กำหนดโครงข่ายถนน (Road Network) สมมติบนภาพ
         // ==========================================
         const nodes = {
-            'A': { lat: 200, lng: 200, name: "บางนา" },
-            'B': { lat: 200, lng: 800, name: "ศรีนครินทร์ (แยกลำสาลี)" },
-            'C': { lat: 800, lng: 800, name: "ลาดพร้าว (บางกะปิ)" },
-            'D': { lat: 800, lng: 200, name: "ดินแดง" },
-            'E': { lat: 500, lng: 500, name: "พระราม 9" },
-            'F': { lat: 200, lng: 1400, name: "สุวรรณภูมิ" },
-            'G': { lat: 800, lng: 1400, name: "มีนบุรี" }
+            'A': { lat: 200, lng: 400, name: "บางนา" },
+            'B': { lat: 200, lng: 1000, name: "ศรีนครินทร์ (แยกลำสาลี)" },
+            'C': { lat: 800, lng: 1000, name: "ลาดพร้าว (บางกะปิ)" },
+            'D': { lat: 800, lng: 400, name: "ดินแดง" },
+            'E': { lat: 500, lng: 700, name: "พระราม 9" },
+            'F': { lat: 200, lng: 1600, name: "สุวรรณภูมิ" },
+            'G': { lat: 800, lng: 1600, name: "มีนบุรี" }
         };
 
-        // สร้างจุดบนแผนที่
+        // สร้างจุดป้ายชื่อบนแผนที่
         for (let key in nodes) {
             L.marker([nodes[key].lat, nodes[key].lng], {
-                icon: L.divIcon({ className: 'poi-icon', html: key, iconSize: [20,20], iconAnchor:[10,10] })
-            }).addTo(map).bindTooltip(nodes[key].name, {permanent: false, direction: 'top'});
+                icon: L.divIcon({ className: 'poi-icon', html: nodes[key].name, iconSize: null, iconAnchor:[0,0] })
+            }).addTo(map);
         }
 
         // กำหนดเส้นทาง (Edges)
@@ -175,26 +175,26 @@
         // วาดเส้นถนนเริ่มต้น
         let roadLayers = {};
         roads.forEach(road => {
-            let polyline = L.polyline(road.coords, { color: '#3b82f6', weight: 4, opacity: 0.8 }).addTo(map);
+            let polyline = L.polyline(road.coords, { color: '#3b82f6', weight: 6, opacity: 0.8 }).addTo(map);
             polyline.bindTooltip(road.name);
             roadLayers[road.id] = polyline;
         });
 
         // 4. จุดสถานีสูบน้ำใกล้เคียง (โชว์ Effect ตอนน้ำท่วม)
-        let pump1 = L.marker([750, 700], {
+        let pump1 = L.marker([850, 700], {
             icon: L.divIcon({ className: 'custom-icon-wrapper', html: `<div class="station-icon pump-normal">P</div>`, iconSize: [28, 28], iconAnchor: [14, 14] })
-        }).addTo(map).bindPopup('สถานีสูบน้ำลาดพร้าว');
+        }).addTo(map).bindTooltip('สถานีสูบน้ำลาดพร้าว', {permanent: true, direction: 'top', offset: [0, -10]});
 
-        let pump2 = L.marker([250, 750], {
+        let pump2 = L.marker([250, 850], {
             icon: L.divIcon({ className: 'custom-icon-wrapper', html: `<div class="station-icon pump-normal">P</div>`, iconSize: [28, 28], iconAnchor: [14, 14] })
-        }).addTo(map).bindPopup('สถานีสูบน้ำคลองชวดใหญ่');
+        }).addTo(map).bindTooltip('สถานีสูบน้ำคลองชวดใหญ่', {permanent: true, direction: 'top', offset: [0, -10]});
 
         // ==========================================
         // 5. ระบบ Routing Algorithm & Simulation
         // ==========================================
         
         function triggerFlood(scenario) {
-            resetRoutes(); // ล้างของเก่าก่อน
+            resetRoutes(false); // ล้างของเก่าก่อนโดยไม่ต้องซูมออก
             
             const statusBox = document.getElementById('route-status');
             const rerouteInfo = document.getElementById('reroute-info');
@@ -204,60 +204,65 @@
 
             if (scenario === 'ladprao') {
                 // น้ำท่วมเส้น R2 (ลาดพร้าว)
-                roadLayers['R2'].setStyle({ color: '#ef4444', weight: 8, dashArray: '10, 10' }); // แดงกระพริบ
+                roadLayers['R2'].setStyle({ color: '#ef4444', weight: 8, dashArray: '15, 10' }); 
+                roadLayers['R2'].bringToFront();
                 
                 // เครื่องสูบน้ำลาดพร้าวทำงาน
                 pump1.setIcon(L.divIcon({ className: 'custom-icon-wrapper', html: `<div class="station-icon pump-working">P</div>`, iconSize: [28, 28], iconAnchor: [14, 14] }));
                 
                 // แนะนำเส้นทางเลี่ยง (เขียว) จาก D -> E -> B -> C แทน
-                roadLayers['R5'].setStyle({ color: '#10b981', weight: 6, dashArray: '10, 5' });
-                roadLayers['R6'].setStyle({ color: '#10b981', weight: 6, dashArray: '10, 5' });
-                roadLayers['R3'].setStyle({ color: '#10b981', weight: 6, dashArray: '10, 5' });
+                roadLayers['R5'].setStyle({ color: '#10b981', weight: 8, dashArray: '15, 10' }).bringToFront();
+                roadLayers['R6'].setStyle({ color: '#10b981', weight: 8, dashArray: '15, 10' }).bringToFront();
+                roadLayers['R3'].setStyle({ color: '#10b981', weight: 8, dashArray: '15, 10' }).bringToFront();
 
                 // อัปเดต UI
-                statusBox.className = "bg-red-500/20 border border-red-500 p-3 rounded-lg text-red-400 mb-3";
+                statusBox.className = "bg-red-500/20 border border-red-500 p-3 rounded-lg text-red-400 mb-3 transition-all duration-300";
                 statusBox.innerHTML = `<div class="flex items-center gap-2 font-bold mb-1"><i class="fa-solid fa-triangle-exclamation"></i> น้ำท่วมขังรอการระบาย</div><p class="text-xs">ระดับน้ำ 15-20 ซม. บริเวณ ถ.ลาดพร้าว (ช่วงรัชดา-บางกะปิ) รถเล็กผ่านไม่ได้</p>`;
                 
                 rerouteSteps.innerHTML = `
-                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดเริ่มต้น:</b> ดินแดง (Node D)</li>
+                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดเริ่มต้น:</b> ดินแดง</li>
                     <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-green-400 before:rounded-full"><span class="text-green-400">เลี่ยงเข้า:</span> ถ.พระราม 9 (ตะวันตก)</li>
                     <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-green-400 before:rounded-full"><span class="text-green-400">เลี้ยวซ้ายเข้า:</span> ถ.ศรีนครินทร์ (เหนือ) ที่แยกลำสาลี</li>
-                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดหมาย:</b> บางกะปิ (Node C)</li>
+                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดหมาย:</b> บางกะปิ</li>
                 `;
                 
-                map.flyTo([500, 500], 1); // Zoom in
+                // แพนกล้องไปที่จุดเกิดเหตุ
+                map.flyTo([650, 700], 0, { animate: true, duration: 1 }); 
             } 
             else if (scenario === 'srinagarindra') {
                 // น้ำท่วมเส้น R4 (ศรีนครินทร์ใต้)
-                roadLayers['R4'].setStyle({ color: '#ef4444', weight: 8, dashArray: '10, 10' });
+                roadLayers['R4'].setStyle({ color: '#ef4444', weight: 8, dashArray: '15, 10' });
+                roadLayers['R4'].bringToFront();
                 
                 // เครื่องสูบน้ำชวดใหญ่ทำงาน
                 pump2.setIcon(L.divIcon({ className: 'custom-icon-wrapper', html: `<div class="station-icon pump-working">P</div>`, iconSize: [28, 28], iconAnchor: [14, 14] }));
                 
                 // แนะนำเส้นทางเลี่ยง A -> D -> E -> B
-                roadLayers['R1'].setStyle({ color: '#10b981', weight: 6, dashArray: '10, 5' });
-                roadLayers['R5'].setStyle({ color: '#10b981', weight: 6, dashArray: '10, 5' });
-                roadLayers['R6'].setStyle({ color: '#10b981', weight: 6, dashArray: '10, 5' });
+                roadLayers['R1'].setStyle({ color: '#10b981', weight: 8, dashArray: '15, 10' }).bringToFront();
+                roadLayers['R5'].setStyle({ color: '#10b981', weight: 8, dashArray: '15, 10' }).bringToFront();
+                roadLayers['R6'].setStyle({ color: '#10b981', weight: 8, dashArray: '15, 10' }).bringToFront();
 
-                statusBox.className = "bg-orange-500/20 border border-orange-500 p-3 rounded-lg text-orange-400 mb-3";
+                statusBox.className = "bg-orange-500/20 border border-orange-500 p-3 rounded-lg text-orange-400 mb-3 transition-all duration-300";
                 statusBox.innerHTML = `<div class="flex items-center gap-2 font-bold mb-1"><i class="fa-solid fa-water"></i> เฝ้าระวังน้ำล้นตลิ่ง</div><p class="text-xs">ระดับน้ำปริ่มฟุตบาท ถ.ศรีนครินทร์ (ช่วงอ่อนนุช-บางนา) การจราจรติดขัดหนัก</p>`;
                 
                 rerouteSteps.innerHTML = `
-                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดเริ่มต้น:</b> บางนา (Node A)</li>
+                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดเริ่มต้น:</b> บางนา</li>
                     <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-green-400 before:rounded-full"><span class="text-green-400">ใช้ทางด่วน/เลี่ยงเข้า:</span> ถ.วิภาวดี-ดินแดง</li>
                     <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-green-400 before:rounded-full"><span class="text-green-400">เลี้ยวขวาเข้า:</span> ถ.พระราม 9 เพื่อมุ่งหน้าตะวันออก</li>
-                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดหมาย:</b> แยกลำสาลี (Node B)</li>
+                    <li class="relative before:content-[''] before:absolute before:-left-[17px] before:top-1.5 before:w-2 before:h-2 before:bg-blue-500 before:rounded-full"><b>จุดหมาย:</b> แยกลำสาลี</li>
                 `;
                 
-                map.flyTo([350, 500], 1);
+                map.flyTo([400, 700], 0, { animate: true, duration: 1 });
             }
         }
 
-        function resetRoutes() {
+        function resetRoutes(zoomOut = true) {
             // คืนค่าเส้นถนนกลับเป็นสีน้ำเงินปกติ
             for (let key in roadLayers) {
-                roadLayers[key].setStyle({ color: '#3b82f6', weight: 4, dashArray: '' });
+                roadLayers[key].setStyle({ color: '#3b82f6', weight: 6, dashArray: '' });
+                roadLayers[key].bringToBack();
             }
+            
             // หยุดการทำงานของปั๊มน้ำ
             let normalIcon = L.divIcon({ className: 'custom-icon-wrapper', html: `<div class="station-icon pump-normal">P</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
             pump1.setIcon(normalIcon);
@@ -266,10 +271,12 @@
             // รีเซ็ต UI กล่องข้อความ
             document.getElementById('reroute-info').classList.add('hidden');
             const statusBox = document.getElementById('route-status');
-            statusBox.className = "bg-green-500/20 border border-green-500 p-3 rounded-lg text-green-400 mb-3";
+            statusBox.className = "bg-green-500/20 border border-green-500 p-3 rounded-lg text-green-400 mb-3 transition-all duration-300";
             statusBox.innerHTML = `<div class="flex items-center gap-2 font-bold mb-1"><i class="fa-solid fa-circle-check"></i> เส้นทางปกติ (ปลอดภัย)</div><p class="text-xs">ปัจจุบันไม่มีรายงานน้ำท่วมขังบนถนนสายหลัก สามารถสัญจรได้ตามปกติ</p>`;
             
-            map.setView([600, 800], 0);
+            if(zoomOut) {
+                map.flyTo([600, 1000], -1, { animate: true, duration: 1 });
+            }
         }
 
     </script>
