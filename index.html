@@ -3,135 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BKK Flood & Rain Monitor</title>
-    <!-- Tailwind CSS -->
+    <title>All-in-One Flood Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .iframe-container { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .iframe-container.active { display: block; opacity: 1; }
         
-        /* สไตล์สำหรับซ่อน/แสดง iframe อย่างนุ่มนวล */
-        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
-        .tab-content.active { display: block; opacity: 1; }
-        
-        /* ปุ่ม Tab */
-        .tab-btn { transition: all 0.2s ease; }
+        .tab-btn { transition: all 0.2s ease; border-left: 4px solid transparent; }
         .tab-btn.active { 
-            background-color: #3b82f6; /* bg-blue-500 */
-            color: #ffffff;
-            border-color: #60a5fa; /* border-blue-400 */
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            background-color: #1e293b; 
+            border-left: 4px solid #3b82f6;
+            color: #60a5fa;
         }
-        .tab-btn.inactive {
-            background-color: #1e293b; /* bg-slate-800 */
-            color: #94a3b8; /* text-slate-400 */
-            border-color: #334155; /* border-slate-700 */
-        }
-        .tab-btn.inactive:hover {
-            background-color: #334155;
-            color: #e2e8f0;
-        }
+        .tab-btn:hover:not(.active) { background-color: #1e293b; color: #f8fafc; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
     </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="h-screen flex overflow-hidden">
 
-    <!-- Header & Tabs -->
-    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex flex-col md:flex-row justify-between items-center gap-4 shrink-0 shadow-lg z-10">
-        
+    <!-- Sidebar (Menu & Hotlines) -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 shadow-xl z-20">
         <!-- Logo -->
-        <div class="flex items-center gap-3">
-            <i class="fa-solid fa-water text-blue-500 text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wide text-white">BKK <span class="text-blue-500">MONITOR</span></h1>
-        </div>
-
-        <!-- Tab Controls -->
-        <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-            <button onclick="switchTab('klong')" id="btn-klong" class="tab-btn active flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm border whitespace-nowrap">
-                <i class="fa-solid fa-map"></i> แผนผังคลอง กทม.
-            </button>
-            <button onclick="switchTab('radar')" id="btn-radar" class="tab-btn inactive flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm border whitespace-nowrap">
-                <i class="fa-solid fa-cloud-showers-heavy"></i> เรดาร์ฝน กทม.
-            </button>
-        </div>
-
-        <!-- Clock & Auto Refresh -->
-        <div class="hidden md:flex items-center gap-4 text-right">
-            <div class="text-xs text-slate-400">
-                <span>ดึงข้อมูลตรงจาก: weather.bangkok.go.th</span>
+        <div class="p-4 border-b border-slate-800 flex items-center gap-3 bg-slate-950">
+            <i class="fa-solid fa-house-tsunami text-blue-500 text-2xl"></i>
+            <div>
+                <h1 class="font-bold text-sm tracking-wide text-white">THAI FLOOD</h1>
+                <p class="text-[10px] text-blue-400">All-in-One Dashboard</p>
             </div>
-            <div id="clock" class="text-lg font-mono font-bold text-blue-400 bg-slate-800 px-3 py-1 rounded-md border border-slate-700">--:--:--</div>
         </div>
-    </header>
 
-    <!-- Content Area (Iframes) -->
-    <main class="flex-1 relative bg-slate-800">
+        <!-- Menu Tabs -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar py-2" id="menu-container">
+            <!-- สร้างเมนูผ่าน JavaScript -->
+        </div>
+
+        <!-- Emergency Hotlines -->
+        <div class="p-4 bg-slate-950 border-t border-slate-800">
+            <h3 class="text-xs font-bold text-red-400 uppercase tracking-wider mb-2">
+                <i class="fa-solid fa-phone-volume animate-pulse mr-1"></i> สายด่วนฉุกเฉิน
+            </h3>
+            <ul class="text-[10px] text-slate-400 space-y-1.5">
+                <li><strong class="text-white text-[11px]">1784</strong> ปภ. (ขอความช่วยเหลือ)</li>
+                <li><strong class="text-white text-[11px]">1669</strong> เจ็บป่วยฉุกเฉิน (สพฉ.)</li>
+                <li><strong class="text-white text-[11px]">1586</strong> กรมทางหลวง</li>
+                <li><strong class="text-white text-[11px]">1129</strong> กฟภ. (ตจว.)</li>
+                <li><strong class="text-white text-[11px]">1130</strong> กฟน. (กทม/นนท์/สมุทรปราการ)</li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col bg-slate-800 relative">
         
-        <!-- Tab 1: แผนผังคลอง -->
-        <!-- ลบ ?fbclid=... ออกเพื่อให้ URL สะอาดและทำงานได้เร็วขึ้น -->
-        <iframe 
-            id="tab-klong" 
-            src="https://weather.bangkok.go.th/KlongMap" 
-            class="tab-content active absolute inset-0 w-full h-full border-0">
-        </iframe>
+        <!-- Main Header (Tools) -->
+        <header class="bg-slate-900/80 backdrop-blur border-b border-slate-700 px-4 py-3 flex justify-between items-center z-10 h-14">
+            <h2 id="current-title" class="font-bold text-slate-200 truncate pr-4">กำลังโหลด...</h2>
+            
+            <div class="flex items-center gap-2 shrink-0">
+                <!-- ปุ่ม Refresh เฉพาะ Tab -->
+                <button onclick="refreshCurrentTab()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded text-xs font-bold transition shadow">
+                    <i class="fa-solid fa-rotate-right"></i> โหลดใหม่
+                </button>
+                <!-- ปุ่ม เปิดหน้าต่างใหม่ (เผื่อเว็บโดนบล็อก Iframe) -->
+                <button onclick="openInNewTab()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded text-xs transition shadow">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> เปิดแท็บใหม่
+                </button>
+            </div>
+        </header>
 
-        <!-- Tab 2: เรดาร์ฝน -->
-        <iframe 
-            id="tab-radar" 
-            src="https://weather.bangkok.go.th/rain/" 
-            class="tab-content absolute inset-0 w-full h-full border-0">
-        </iframe>
+        <!-- Iframes Container -->
+        <div id="iframe-wrapper" class="flex-1 relative bg-black">
+            <!-- สร้าง iframe ผ่าน JavaScript -->
+        </div>
 
     </main>
 
     <script>
-        // 1. ฟังก์ชันนาฬิกา
-        function updateClock() {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('th-TH');
+        // ข้อมูลเว็บไซต์ทั้งหมด 9 แหล่ง
+        const sites = [
+            { id: "thaiwater", name: "1. ThaiWater (ภาพรวมน้ำ)", url: "https://www.thaiwater.net/new4all", icon: "fa-droplet" },
+            { id: "doh", name: "2. กรมทางหลวง CCTV", url: "https://hdms.doh.go.th/dashboard", icon: "fa-video" },
+            { id: "windy", name: "3. Windy (เรดาร์ฝน)", url: "https://www.windy.com/?13.756,100.502,6", icon: "fa-wind" },
+            { id: "tmd", name: "4. เรดาร์กรมอุตุฯ", url: "https://weather.tmd.go.th", icon: "fa-satellite-dish" },
+            { id: "googleflood", name: "5. Google Flood Hub", url: "https://sites.research.google/floods", icon: "fa-google" },
+            { id: "bkk-rain", name: "6. กทม. ปริมาณฝน", url: "https://weather.bangkok.go.th/rain", icon: "fa-cloud-rain" },
+            { id: "bkk-flood", name: "7. กทม. น้ำท่วมถนน", url: "https://weather.bangkok.go.th/flood/", icon: "fa-car-burst" },
+            { id: "bkk-klong", name: "8. กทม. ผังคลอง", url: "https://weather.bangkok.go.th/KlongMap", icon: "fa-map-location-dot" },
+            { id: "claude", name: "9. เลี่ยงถนนน้ำท่วม", url: "https://claude.ai/artifact/N6umcENfSgoY6GMkhVKwZs", icon: "fa-route" }
+        ];
+
+        let currentActiveId = sites[0].id;
+
+        // ฟังก์ชันสร้างเมนูและ iframe
+        function initApp() {
+            const menuContainer = document.getElementById('menu-container');
+            const iframeWrapper = document.getElementById('iframe-wrapper');
+
+            sites.forEach((site, index) => {
+                // สร้างปุ่มเมนู
+                const btn = document.createElement('button');
+                btn.className = `tab-btn w-full text-left px-4 py-3 flex items-center gap-3 text-sm text-slate-400 ${index === 0 ? 'active' : ''}`;
+                btn.id = `btn-${site.id}`;
+                btn.onclick = () => switchTab(site.id);
+                btn.innerHTML = `<i class="fa-solid ${site.icon} w-4 text-center"></i> <span class="truncate">${site.name}</span>`;
+                menuContainer.appendChild(btn);
+
+                // สร้าง iframe (ใส่ loading="lazy" เพื่อไม่ให้คอมพิวเตอร์อืดตอนเปิดเว็บ)
+                const iframe = document.createElement('iframe');
+                iframe.id = `frame-${site.id}`;
+                // โหลด src เฉพาะแท็บแรกก่อน แท็บอื่นปล่อยว่างไว้โหลดตอนกด
+                iframe.src = index === 0 ? site.url : ""; 
+                iframe.className = `iframe-container absolute inset-0 w-full h-full border-0 ${index === 0 ? 'active' : ''}`;
+                iframe.setAttribute('allowfullscreen', 'true');
+                iframeWrapper.appendChild(iframe);
+            });
+
+            updateHeader(sites[0]);
         }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-        // 2. ฟังก์ชันสลับ Tab
-        function switchTab(tabName) {
-            // ดึง Element ของปุ่มและเนื้อหา
-            const btnKlong = document.getElementById('btn-klong');
-            const btnRadar = document.getElementById('btn-radar');
-            const tabKlong = document.getElementById('tab-klong');
-            const tabRadar = document.getElementById('tab-radar');
-
-            if (tabName === 'klong') {
-                // สลับคลาสปุ่ม
-                btnKlong.className = "tab-btn active flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm border whitespace-nowrap";
-                btnRadar.className = "tab-btn inactive flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm border whitespace-nowrap";
-                
-                // สลับการแสดงผล iframe
-                tabKlong.classList.add('active');
-                tabRadar.classList.remove('active');
-            } 
-            else if (tabName === 'radar') {
-                // สลับคลาสปุ่ม
-                btnRadar.className = "tab-btn active flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm border whitespace-nowrap";
-                btnKlong.className = "tab-btn inactive flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-bold text-sm border whitespace-nowrap";
-                
-                // สลับการแสดงผล iframe
-                tabRadar.classList.add('active');
-                tabKlong.classList.remove('active');
-            }
-        }
-
-        // 3. ฟังก์ชันรีเฟรช iframe อัตโนมัติทุกๆ 5 นาที (ป้องกันเว็บ กทม. ค้าง)
-        setInterval(() => {
-            const klongFrame = document.getElementById('tab-klong');
-            const radarFrame = document.getElementById('tab-radar');
+        // ฟังก์ชันสลับ Tab
+        function switchTab(id) {
+            currentActiveId = id;
+            const site = sites.find(s => s.id === id);
             
-            // รีเฟรชเฉพาะหน้าที่กำลังเปิดอยู่เพื่อไม่ให้กระตุก
-            if (klongFrame.classList.contains('active')) {
-                klongFrame.src = klongFrame.src;
-            } else {
-                radarFrame.src = radarFrame.src;
+            // อัปเดตเมนู
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${id}`).classList.add('active');
+
+            // อัปเดต iframe
+            document.querySelectorAll('.iframe-container').forEach(frame => frame.classList.remove('active'));
+            const activeFrame = document.getElementById(`frame-${id}`);
+            
+            // ถ้า iframe ยังไม่เคยโหลด src ให้โหลดตอนนี้ (Lazy Load)
+            if (!activeFrame.src || activeFrame.src === window.location.href) {
+                activeFrame.src = site.url;
             }
-        }, 5 * 60 * 1000); // 5 นาที
+            
+            activeFrame.classList.add('active');
+            updateHeader(site);
+        }
+
+        // อัปเดตชื่อหัวข้อด้านบน
+        function updateHeader(site) {
+            document.getElementById('current-title').innerHTML = `<i class="fa-solid ${site.icon} mr-2 text-blue-400"></i> ${site.name}`;
+        }
+
+        // 🌟 ฟังก์ชันรีเฟรชหน้าเว็บเฉพาะ Tab ที่กำลังเปิด 🌟
+        function refreshCurrentTab() {
+            const activeFrame = document.getElementById(`frame-${currentActiveId}`);
+            const btn = document.querySelector('.fa-rotate-right');
+            
+            // หมุนไอคอนโชว์ว่ากำลังรีเฟรช
+            btn.classList.add('fa-spin');
+            setTimeout(() => btn.classList.remove('fa-spin'), 1000);
+
+            // บังคับ Iframe โหลดใหม่
+            const currentUrl = activeFrame.src;
+            activeFrame.src = "about:blank"; // ล้างของเก่าให้จอดำแปบนึง
+            setTimeout(() => {
+                activeFrame.src = currentUrl; // ใส่ URL กลับเข้าไป
+            }, 100);
+        }
+
+        // ฟังก์ชันเปิดแท็บใหม่
+        function openInNewTab() {
+            const site = sites.find(s => s.id === currentActiveId);
+            window.open(site.url, '_blank');
+        }
+
+        // เริ่มต้นการทำงาน
+        initApp();
     </script>
 </body>
 </html>
