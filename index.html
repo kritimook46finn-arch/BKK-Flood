@@ -134,8 +134,8 @@
         const imgHeight = 1200;
         const bounds = [[0, 0], [imgHeight, imgWidth]];
         
-        // ** ถ้าคุณมีไฟล์ภาพ 'bkk-klong.jpg' ให้เปลี่ยน URL ด้านล่างนี้เป็นชื่อไฟล์ของคุณได้เลยครับ **
-        L.imageOverlay('https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Blank_Map_of_Bangkok.svg/1024px-Blank_Map_of_Bangkok.svg.png', bounds, {opacity: 0.1}).addTo(map);
+        // ดึงภาพจากโฟลเดอร์เดียวกันมาใช้ และปรับความสว่าง (opacity) ให้เห็นชัดๆ
+        L.imageOverlay('bkk-klong.png', bounds, {opacity: 0.8}).addTo(map);
         map.fitBounds(bounds);
         map.setView([600, 1000], -1);
 
